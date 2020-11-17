@@ -1,0 +1,16 @@
+config setup
+conn L2TP-PSK
+    authby=secret
+    auto=add
+    keyingtries=3
+    dpddelay=30
+    dpdtimeout=120
+    dpdaction=clear
+    rekey=yes
+    ikelifetime=8h
+    keylife=1h
+    type=transport
+    left={{ host_default_route }}
+    leftprotoport=17/1701
+    right={{ vpn_ip_address }}
+    rightprotoport=17/1701

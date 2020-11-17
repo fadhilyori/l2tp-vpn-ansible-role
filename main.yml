@@ -1,0 +1,77 @@
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  vars_files:
+    - ./vars/main.yml
+  tasks:
+    - name: install xl2tpd
+      package:
+        name: xl2tpd
+        state: present
+        update_cache: yes
+    
+    - name: install strongswan
+      package:
+        name: strongswan
+        state: present
+        update_cache: yes
+    
+    - name: stop vpn service
+      shell: /bin/echo "d strong-vpn" > /var/run/xl2tpd/l2tp-control
+
+    - name: configure ipsec configuration
+      template:
+        src: "./templates/etc/ipsec.conf.j2"
+        dest: "/etc/ipsec.conf"
+        force: yes
+        backup: no
+        owner: root
+        group: root
+        mode: 0600
+    
+    - name: configure ipsec secrets configuration
+      template:
+        src: "./templates/etc/ipsec.secrets.j2"
+        dest: "/etc/ipsec.secrets"
+        force: yes
+        backup: no
+        owner: root
+        group: root
+        mode: 0600
+
+    - name: configure xl2tpd configuration
+      template:
+        src: "./templates/etc/xl2tpd/xl2tpd.conf.j2"
+        dest: "/etc/xl2tpd/xl2tpd.conf"
+        force: yes
+        backup: no
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: configure l2tpd client
+      template:
+        src: "./templates/etc/ppp/options.l2tpd.client.j2"
+        dest: "/etc/ppp/options.l2tpd.client"
+        force: yes
+        backup: no
+        owner: root
+        group: root
+        mode: 0644
+    
+    - name: add routing vpn via default gateway
+      shell: ip ro ad {{ vpn_ip_address }} via {{ host_default_route }}
+      ignore_errors: yes
+
+    - name: restart ipsec service
+      shell: ipsec restart
+
+    - name: restart xl2tpd service
+      systemd:
+        name: xl2tpd
+        state: restarted
+
+    - name: start vpn service
+      shell: /bin/echo "c strong-vpn" > /var/run/xl2tpd/l2tp-control
+      when: vpn_start_service

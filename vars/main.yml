@@ -1,0 +1,7 @@
+---
+host_default_route: <YOUR DEFAULT IP GATEWAY>
+vpn_ip_address: <VPN IP DIAL>
+vpn_username: <VPN USERNAME
+vpn_password: <VPN PASSWORD>
+vpn_l2tp_secret: <VPN SECRET>
+vpn_start_service: true
